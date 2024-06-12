@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "@chakra-ui/react";
 import { FolderIcon, DocumentIcon } from "@heroicons/react/24/outline";
-import { isDirectory } from "@/utils/globus";
+import { isDirectory } from "../list-endpoints/globus";
 
 import type { FileDocument } from "@globus/sdk/cjs/lib/services/transfer/service/file-operations";
 

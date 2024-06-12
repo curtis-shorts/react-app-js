@@ -18,9 +18,9 @@ import { ArrowUpOnSquareIcon } from "@heroicons/react/24/outline";
 
 import type { FileDocument } from "@globus/sdk/cjs/lib/services/transfer/service/file-operations";
 import FileNameForm from "./FileNameForm";
-import { isDirectory, readable } from "@/utils/globus";
+import { isDirectory, readable } from "../list-endpoints/globus";
 import FileEntryIcon from "./FileEntryIcon";
-import { TransferSettingsDispatchContext } from "../transfer-settings-context/Context";
+import { TransferSettingsDispatchContext } from "../list-endpoints/Context";
 import { FileBrowserContext } from "./Context";
 
 export default function FileEntry({
@@ -66,6 +66,7 @@ export default function FileEntry({
       {isSource && (
         <Td>
           <Checkbox
+            size="lg"
             onChange={(e) => {
               if (e.target.checked) {
                 transferSettingsDispatch({

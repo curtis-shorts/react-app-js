@@ -33,8 +33,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { transfer } from "@globus/sdk/cjs";
 
-import { useGlobusAuth } from "../globus-auth-context/useGlobusAuth";
-import { TransferSettingsDispatchContext } from "../transfer-settings-context/Context";
+import { useOAuthContext } from "../globus-auth-context/GlobusOAuthProvider";
+import { TransferSettingsDispatchContext } from "../list-endpoints/Context";
 
 import FileBrowserViewMenu from "./FileBrowserViewMenu";
 import FileBrowserError from "./FileBrowserError";
@@ -58,11 +58,11 @@ export default function FileBrowser({
   collection: string;
   path?: string;
 }) {
-  const auth = useGlobusAuth();
+  const auth = useOAuthContext();
 
   const [fileBrowser, fileBrowserDispatch] = useReducer(
     fileBrowserReducer,
-    initialState,
+    initialState
   );
 
   const transferSettingsDispatch = useContext(TransferSettingsDispatchContext);
@@ -74,11 +74,11 @@ export default function FileBrowser({
   const [showAddDirectory, setShowAddDirectory] = useState(false);
   const [endpoint, setEndpoint] = useState<Record<string, any> | null>(null);
   const [lsResponse, setLsResponse] = useState<Record<string, any> | null>(
-    null,
+    null
   );
   const [items, setItems] = useState<FileDocument[] | []>([]);
   const [error, setError] = useState<DirectoryListingError | unknown | null>(
-    null,
+    null
   );
   const toast = useToast();
 
@@ -174,7 +174,7 @@ export default function FileBrowser({
   const rename = async (
     file: FileDocument,
     absolutePath: string,
-    updatedName: string,
+    updatedName: string
   ) => {
     const response = await transfer.fileOperations.rename(collection, {
       payload: {
@@ -191,8 +191,8 @@ export default function FileBrowser({
     } else {
       setItems(
         items.map((item) =>
-          item.name === file.name ? { ...item, name: updatedName } : item,
-        ),
+          item.name === file.name ? { ...item, name: updatedName } : item
+        )
       );
     }
   };
@@ -303,7 +303,7 @@ export default function FileBrowser({
                           absolutePath={lsResponse.absolute_path}
                           openDirectory={() => {
                             setBrowserPath(
-                              `${lsResponse.absolute_path}${item.name}/`,
+                              `${lsResponse.absolute_path}${item.name}/`
                             );
                             setShowAddDirectory(false);
                           }}
@@ -311,7 +311,7 @@ export default function FileBrowser({
                             await rename(
                               item,
                               lsResponse.absolute_path,
-                              updatedName,
+                              updatedName
                             );
                           }}
                         />

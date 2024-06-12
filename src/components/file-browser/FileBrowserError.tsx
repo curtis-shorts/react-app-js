@@ -13,7 +13,7 @@ import {
   ListItem,
 } from "@chakra-ui/react";
 
-import { useGlobusAuth } from "../globus-auth-context/useGlobusAuth";
+import { useOAuthContext } from "../globus-auth-context/GlobusOAuthProvider";
 import {
   isErrorWellFormed,
   isConsentRequiredError,
@@ -26,7 +26,7 @@ export default function FileBrowserError({
 }: {
   error: DirectoryListingError | unknown;
 }) {
-  const auth = useGlobusAuth();
+  const auth = useOAuthContext();
 
   const isWellFormed = isErrorWellFormed(error);
 

@@ -6,6 +6,7 @@ import GlobusOAuthProvider from './components/globus-auth-context/GlobusOAuthPro
 // Runs an example from Globus (converted to JS) retrieved from: https://github.com/globus/globus-sdk-javascript/blob/main/examples/basic/index.html
 //import GlobusApp from './GlobusApp.jsx';
 import GlobusApp from './MyGlobusApp.jsx';
+import ListEndpoints from './components/list-endpoints/ListEndpoints.jsx';
 
 // Set the default values
 const redirect = window.location.origin + window.location.pathname
@@ -30,8 +31,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     scopes={scopes}
   >
     <React.StrictMode>
-      <h1>Globus Example 1:</h1>
+      <h1>Globus Example 2:</h1>
       <GlobusApp collection={collection}/>
+      <ListEndpoints
+        transferCollection={collection}
+        transferPath='/home/cushorts'
+      />
     </React.StrictMode>
   </GlobusOAuthProvider>
 )

@@ -77,7 +77,7 @@ export default function transferSettingsReducer(
 import { FileDocument } from "@globus/sdk/cjs/lib/services/transfer/service/file-operations";
 
 // Unidirectional naming convention
-const initialState = {
+export const initialState = {
   source: null,
   source_path: null,
   destination: null,
@@ -94,7 +94,7 @@ const initialState = {
   items: [],
 };*/
 
-const transferSettingsReducer = (state, action) => {
+export const transferSettingsReducer = (state, action) => {
   switch (action.type) {
     case "SET_SOURCE": {
       return { ...state, source: action.payload };
@@ -126,6 +126,5 @@ const transferSettingsReducer = (state, action) => {
   }
 };
 
-export { initialState, transferSettingsReducer };
 
 

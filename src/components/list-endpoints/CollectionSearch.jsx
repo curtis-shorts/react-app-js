@@ -117,7 +117,7 @@ import { transfer } from "@globus/sdk/cjs";
 
 import { useOAuthContext } from "../globus-auth-context/GlobusOAuthProvider";
 
-const CollectionSearch = ({ onSelect = () => {} }) => {
+export const CollectionSearch = ({ onSelect = () => {} }) => {
   const auth = useOAuthContext();
   const [results, setResults] = useState([]);
 

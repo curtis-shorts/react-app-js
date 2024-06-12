@@ -335,14 +335,12 @@ import {
   TransferSettingsContext,
   TransferSettingsDispatchContext,
 } from "./Context";
-import transferSettingsReducer, { initialState } from "./reducer";
+import {transferSettingsReducer, initialState } from "./reducer";
 import { isDirectory } from "./globus";
 
 // index.tsx from the example
-const transferCollection = "";
-const transferPath = "";
 
-export default function Home() {
+export default function Home({transferCollection, transferPath}) {
   const auth = useOAuthContext();
   const [transferSettings, dispatch] = useReducer(
     transferSettingsReducer,
