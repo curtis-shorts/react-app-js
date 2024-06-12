@@ -29,6 +29,7 @@ const GlobusApp = ({ collection }) => {
       SIGN_OUT: document.getElementById('sign-out'),
       USER_INFO: document.getElementById('user-information'),
       LS_RESPONSE: document.getElementById('ls-response'),
+      TRANSFER_TASK: document.getElementById('transfer-task'),
     };
 
     UI.SIGN_IN.addEventListener('click', () => {
@@ -41,6 +42,7 @@ const GlobusApp = ({ collection }) => {
       UI.SIGN_IN.style.display = 'block';
       UI.SIGN_OUT.style.display = 'none';
       UI.LS_RESPONSE.innerText = '';
+      UI.TRANSFER_TASK.innerText = '';
     });
 
     if (manager.authenticated) {
@@ -55,6 +57,24 @@ const GlobusApp = ({ collection }) => {
         .then((response) => response.json())
         .then((json) => {
           UI.LS_RESPONSE.innerText = JSON.stringify(json, null, 2);
+          const isError = errors.isErrorWellFormed(json);
+          if (isError) {
+            const handler = manager.handleErrorResponse(json, false);
+            const btn = document.createElement('button');
+            btn.innerText = 'Handle';
+            btn.onclick = handler;
+            document.body.appendChild(btn);
+          }
+        });
+      transfer.task
+        .getAll(/*"1fd409a4-28e5-11ef-87cc-f5d0174cd943",*/ {
+          headers: {
+            Authorization: `Bearer ${manager.tokens.transfer.access_token}`,
+          },
+        })
+        .then((response) => response.json())
+        .then((json) => {
+          UI.TRANSFER_TASK.innerText = JSON.stringify(json, null, 2);
           const isError = errors.isErrorWellFormed(json);
           if (isError) {
             const handler = manager.handleErrorResponse(json, false);
@@ -80,5 +100,7 @@ const GlobusApp = ({ collection }) => {
     </div>
   );
 };
+
+//<pre id="transfer-task"></pre>
 
 export default GlobusApp;
