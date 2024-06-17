@@ -34,7 +34,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     scopes={scopes}
   >
     <React.StrictMode>
-      <h1>Globus Example :</h1>
+      <h1>Globus Example 1:</h1>
       <GlobusSessionManager />
       <ListEndpoints
         transferCollection={collection}

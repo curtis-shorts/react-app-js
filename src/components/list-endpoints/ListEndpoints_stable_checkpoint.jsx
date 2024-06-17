@@ -119,6 +119,8 @@ export default function Home({transferCollection, transferPath}) {
       })
     ).json();
 
+    // Transfer language is unidirectional, but should be direction-agnostic elsewhere
+    //    to support bi-directional transfers
     const response = await transfer.taskSubmission.submitTransfer({
       payload: {
         submission_id: id.value,
@@ -128,8 +130,8 @@ export default function Home({transferCollection, transferPath}) {
         DATA: transferSettings.items.map((item) => {
           return {
             DATA_TYPE: "transfer_item",
-            file_path_one: `${transferSettings.file_path_one}${item.name}`,
-            file_path_two: `${transferSettings.file_path_two}${item.name}`,
+            source_path: `${transferSettings.file_path_one}${item.name}`,
+            destination_path: `${transferSettings.file_path_two}${item.name}`,
             recursive: isDirectory(item),
           };
         }),
