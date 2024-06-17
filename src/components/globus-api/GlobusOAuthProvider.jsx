@@ -2,8 +2,39 @@ import React, { useState, useReducer, useEffect, useContext } from "react";
 import { createContext } from "react";
 import { authorization } from "@globus/sdk/cjs";
 
-import { reducer } from "./reducer";
-import GlobusAuthState from "./DefaultAuthState";
+//import { reducer } from "./reducer";
+//import GlobusAuthState from "../globus-auth-context/DefaultAuthState";
+
+class DefaultAuthState {
+  constructor() {
+    this.isAuthenticated = false;
+    this.isLoading = false;
+    this.error = undefined;
+    this.authorization = undefined;
+    this.events = undefined;
+  }
+}
+
+const reducer = (state, action) => {
+  // state: Globus authentication class
+  // action = { type: "AUTHENTICATED"; payload: boolean } | { type: "REVOKE" }
+  const AUTHENTICATED = "AUTHENTICATED";
+  const REVOKE = "REVOKE";
+  switch (action.type) {
+    case AUTHENTICATED:
+      return {
+        ...state,
+        isAuthenticated: action.payload,
+      };
+    case REVOKE:
+      return {
+        ...state,
+        isAuthenticated: false,
+      };
+    default:
+      return state;
+  }
+};
 
 // Create the OAuthContext
 const OAuthContext = createContext(undefined);
@@ -21,7 +52,7 @@ const GlobusOAuthProvider = ({
   client,
   children,
 }) => {
-  const initialState = new GlobusAuthState();
+  const initialState = DefaultAuthState;
 
   const [state, dispatch] = useReducer(reducer, initialState);
   const [instance, setInstance] = useState(undefined);

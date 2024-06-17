@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { authorization, transfer, errors } from "@globus/sdk";
 
-import { useOAuthContext } from './components/globus-auth-context/GlobusOAuthProvider';
+import { useOAuthContext } from './components/globus-api/GlobusOAuthProvider';
 
 const GlobusApp = ({ collection }) => {
   const context = useOAuthContext()

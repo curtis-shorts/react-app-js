@@ -13,7 +13,7 @@ import {
   ListItem,
 } from "@chakra-ui/react";
 
-import { useOAuthContext } from "../globus-auth-context/GlobusOAuthProvider";
+import { useOAuthContext } from "../globus-api/GlobusOAuthProvider";
 import {
   isErrorWellFormed,
   isConsentRequiredError,

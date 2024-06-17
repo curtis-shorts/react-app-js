@@ -2,15 +2,17 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 
 // Provides the OAuth context
-import GlobusOAuthProvider from './components/globus-auth-context/GlobusOAuthProvider.jsx';
-// Runs an example from Globus (converted to JS) retrieved from: https://github.com/globus/globus-sdk-javascript/blob/main/examples/basic/index.html
-//import GlobusApp from './GlobusApp.jsx';
+import GlobusOAuthProvider from './components/globus-api/GlobusOAuthProvider.jsx';
+// Runs an example from Globus (converted to JS) retrieved from:
+//    https://github.com/globus/globus-sdk-javascript/blob/main/examples/basic/index.html
 import GlobusApp from './MyGlobusApp.jsx';
+// Runs the static data portal transfer UI example retrieved from:
+//    https://github.com/globus/static-data-portal
 import ListEndpoints from './components/list-endpoints/ListEndpoints.jsx';
 
 // Set the default values
 const redirect = window.location.origin + window.location.pathname
-console.log(redirect)
+console.log("Redirect path:",redirect)
 // Client is the UUID of the Thick Client the app is registered to with Globus
 const client = 'be49bc0c-8a25-412b-9ceb-f550beab6137'
 // Scope of the Globus API that the client is requesting to access
@@ -31,8 +33,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     scopes={scopes}
   >
     <React.StrictMode>
-      <h1>Globus Example 2:</h1>
-      <GlobusApp collection={collection}/>
+      <h1>Globus Example :</h1>
       <ListEndpoints
         transferCollection={collection}
         transferPath='/home/cushorts'
@@ -40,3 +41,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </React.StrictMode>
   </GlobusOAuthProvider>
 )
+
+//<GlobusApp collection={collection}//

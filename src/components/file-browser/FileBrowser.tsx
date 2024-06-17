@@ -33,8 +33,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { transfer } from "@globus/sdk/cjs";
 
-import { useOAuthContext } from "../globus-auth-context/GlobusOAuthProvider";
-import { TransferSettingsDispatchContext } from "../list-endpoints/Context";
+import { useOAuthContext } from "../globus-api/GlobusOAuthProvider";
+//import { TransferSettingsDispatchContext } from "../list-endpoints/Context";
+import { useTransferDispatchContext } from "../list-endpoints/ListEndpoints";
 
 import FileBrowserViewMenu from "./FileBrowserViewMenu";
 import FileBrowserError from "./FileBrowserError";
@@ -54,7 +55,7 @@ export default function FileBrowser({
   collection,
   path,
 }: {
-  variant: "source" | "destination";
+  variant: "endpoint_one" | "endpoint_two";
   collection: string;
   path?: string;
 }) {
@@ -65,9 +66,9 @@ export default function FileBrowser({
     initialState
   );
 
-  const transferSettingsDispatch = useContext(TransferSettingsDispatchContext);
+  const transferSettingsDispatch = useTransferDispatchContext(); //useContext(TransferSettingsDispatchContext);
 
-  const isSource = variant === "source";
+  const isSource = variant === "endpoint_one";
 
   const [browserPath, setBrowserPath] = useState(path);
   const [isLoading, setIsLoading] = useState(false);
@@ -107,7 +108,7 @@ export default function FileBrowser({
       return;
     }
     setIsLoading(true);
-    const isSource = variant === "source";
+    const isSource = variant === "endpoint_one";
     if (isSource) {
       transferSettingsDispatch({
         type: "RESET_ITEMS",
@@ -139,7 +140,7 @@ export default function FileBrowser({
       setBrowserPath(transferPath);
     }
     transferSettingsDispatch({
-      type: isSource ? "SET_SOURCE_PATH" : "SET_DESTINATION_PATH",
+      type: isSource ? "SET_FILE_PATH_ONE" : "SET_FILE_PATH_TWO",
       payload: transferPath,
     });
   }, [

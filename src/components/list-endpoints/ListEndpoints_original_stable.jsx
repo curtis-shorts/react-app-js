@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useReducer, createContext, useContext } 
 import {
   Box, Center, Container, Flex,
   IconButton, Input, InputGroup, InputLeftAddon,
-  Text, Icon, InputRightElement, Button,
+  Text, Icon, InputRightElement, Button, useToast,
   SimpleGrid, useDisclosure, Drawer, DrawerBody,
   DrawerContent, DrawerHeader, DrawerOverlay, Card,
-  CardBody, Spacer, Link, useToast
+  CardBody, Spacer, Link,
 } from "@chakra-ui/react";
 import {
   PlayCircleIcon,
@@ -17,8 +17,6 @@ import { transfer, webapp } from "@globus/sdk/cjs";
 import FileBrowser from "../file-browser/FileBrowser";
 import { useOAuthContext } from "../globus-api/GlobusOAuthProvider";
 import { CollectionSearch } from "./CollectionSearch";
-
-import { submitGlobusTransfer } from "../globus-api/submitGlobusTransfer";
 
 /*
  * Displays both endpoints and the current directory contents
@@ -84,18 +82,62 @@ export const transferSettingsReducer = (state, action) => {
   }
 };
 
+function isDirectory(entry) {
+  return entry.type === "dir";
+}
+
 export default function Home({transferCollection, transferPath}) {
   const auth = useOAuthContext();
   const [transferSettings, dispatch] = useReducer(
     transferSettingsReducer,
     initialState
   );
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
-  // Current WIP to seperate the transfer call to another file
-  async function submitGlobusTransferWrapper(){
-    const response = await submitGlobusTransfer(transferSettings, auth);
+  const getTransferHeaders = useCallback(() => {
+    return {
+      Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
+    };
+  }, [auth.authorization?.tokens.transfer?.access_token]);
+
+  async function handleStartTransfer() {
+    if (
+      !transferSettings.endpoint_one ||
+      !transferSettings.file_path_one ||
+      !transferSettings.file_path_two ||
+      !transferSettings.endpoint_two
+    ) {
+      return;
+    }
+
+    const id = await (
+      await transfer.taskSubmission.submissionId({
+        headers: {
+          ...getTransferHeaders(),
+        },
+      })
+    ).json();
+
+    const response = await transfer.taskSubmission.submitTransfer({
+      payload: {
+        submission_id: id.value,
+        label: `Transfer from ${transferSettings.endpoint_one.id}`,
+        source_endpoint: transferSettings.endpoint_one.id,
+        destination_endpoint: transferSettings.endpoint_two.id,
+        DATA: transferSettings.items.map((item) => {
+          return {
+            DATA_TYPE: "transfer_item",
+            file_path_one: `${transferSettings.file_path_one}${item.name}`,
+            file_path_two: `${transferSettings.file_path_two}${item.name}`,
+            recursive: isDirectory(item),
+          };
+        }),
+      },
+      headers: {
+        ...getTransferHeaders(),
+      },
+    });
 
     const data = await response.json();
 
@@ -131,14 +173,6 @@ export default function Home({transferCollection, transferPath}) {
       });
     }
   }
-
-
-  const getTransferHeaders = useCallback(() => {
-    return {
-      Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
-    };
-  }, [auth.authorization?.tokens.transfer?.access_token]);
-
 
   useEffect(() => {
     async function fetchCollection() {
@@ -176,7 +210,7 @@ export default function Home({transferCollection, transferPath}) {
           <Box p={2}>
             <Box p={2}>
               <InputGroup>
-                <InputLeftAddon>endpoint_one</InputLeftAddon>
+                <InputLeftAddon>Endpoint one:</InputLeftAddon>
                 <Input
                   value={endpoint_one ? endpoint_one.display_name || endpoint_one.name : "..."}
                   variant="filled"
@@ -194,7 +228,7 @@ export default function Home({transferCollection, transferPath}) {
             <Box p={2}>
               <Box p={2}>
                 <InputGroup>
-                  <InputLeftAddon>endpoint_two</InputLeftAddon>
+                  <InputLeftAddon>Endpoint two</InputLeftAddon>
                   <Input
                     value={endpoint_two.display_name || endpoint_two.name}
                   />
@@ -232,7 +266,7 @@ export default function Home({transferCollection, transferPath}) {
                       {endpoint_one?.display_name}.
                       <br /> To transfer data to another location,{" "}
                       <Button onClick={onOpen} variant="link">
-                        search for a endpoint_two
+                        search for a endpoint two
                       </Button>
                       .
                     </Text>
@@ -249,7 +283,7 @@ export default function Home({transferCollection, transferPath}) {
                 <DrawerOverlay />
                 <DrawerContent bg="white">
                   <DrawerHeader borderBottomWidth="1px">
-                    Search for a endpoint_two
+                    Search for endpoint two
                   </DrawerHeader>
                   <DrawerBody>
                     <CollectionSearch
@@ -280,7 +314,7 @@ export default function Home({transferCollection, transferPath}) {
               </Text>
               <Spacer />
               <Button
-                onClick={() => submitGlobusTransferWrapper()}
+                onClick={() => handleStartTransfer()}
                 isDisabled={!endpoint_one || !endpoint_two}
                 leftIcon={<Icon as={PlayCircleIcon} boxSize={6} />}
               >

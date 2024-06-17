@@ -18,9 +18,47 @@ import { ArrowUpOnSquareIcon } from "@heroicons/react/24/outline";
 
 import type { FileDocument } from "@globus/sdk/cjs/lib/services/transfer/service/file-operations";
 import FileNameForm from "./FileNameForm";
-import { isDirectory, readable } from "../list-endpoints/globus";
+//import { isDirectory, readable } from "../list-endpoints/globus";
+
+const KB = 1000;
+const MB = KB * 1000;
+const GB = MB * 1000;
+const TB = GB * 1000;
+const PB = TB * 1000;
+
+export function readable(bytes, truncate = 2) {
+  let unit = "B";
+  let bytesInUnit = 1;
+  if (bytes < KB) {
+    return `${bytes} ${unit}`;
+  } else if (bytes < MB) {
+    unit = "KB";
+    bytesInUnit = KB;
+  } else if (bytes < GB) {
+    unit = "MB";
+    bytesInUnit = MB;
+  } else if (bytes < TB) {
+    unit = "GB";
+    bytesInUnit = GB;
+  } else if (bytes < PB) {
+    unit = "TB";
+    bytesInUnit = TB;
+  } else {
+    unit = "PB";
+    bytesInUnit = PB;
+  }
+  const value = bytes / bytesInUnit;
+  return `${value.toFixed(truncate)} ${unit}`;
+}
+
+export function isDirectory(entry) {
+  return entry.type === "dir";
+}
+
 import FileEntryIcon from "./FileEntryIcon";
-import { TransferSettingsDispatchContext } from "../list-endpoints/Context";
+//import { TransferSettingsDispatchContext } from "../list-endpoints/Context";
+import { useTransferDispatchContext } from "../list-endpoints/ListEndpoints";
+
 import { FileBrowserContext } from "./Context";
 
 export default function FileEntry({
@@ -42,7 +80,10 @@ export default function FileEntry({
   const [isLoading, setIsLoading] = useState(false);
   const [showEditView, setShowEditView] = useState(false);
   const menuRef = React.useRef<HTMLTableRowElement>(null);
-  const transferSettingsDispatch = useContext(TransferSettingsDispatchContext);
+
+  //const transferSettingsDispatch = useContext(TransferSettingsDispatchContext);
+  const transferSettingsDispatch = useTransferDispatchContext();
+
   const fileBrowser = useContext(FileBrowserContext);
   const displayContextMenu: MouseEventHandler<
     HTMLButtonElement | HTMLParagraphElement
@@ -67,6 +108,7 @@ export default function FileEntry({
         <Td>
           <Checkbox
             size="lg"
+            boxSize="20px"
             onChange={(e) => {
               if (e.target.checked) {
                 transferSettingsDispatch({
