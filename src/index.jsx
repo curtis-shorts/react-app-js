@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 
 // Provides the OAuth context
 import GlobusOAuthProvider from './components/globus-api/GlobusOAuthProvider.jsx';
+import GlobusSessionManager from './components/globus-api/GlobusSessionManager.jsx';
 // Runs an example from Globus (converted to JS) retrieved from:
 //    https://github.com/globus/globus-sdk-javascript/blob/main/examples/basic/index.html
 import GlobusApp from './MyGlobusApp.jsx';
@@ -34,6 +35,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   >
     <React.StrictMode>
       <h1>Globus Example :</h1>
+      <GlobusSessionManager />
       <ListEndpoints
         transferCollection={collection}
         transferPath='/home/cushorts'
