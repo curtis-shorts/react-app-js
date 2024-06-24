@@ -10,7 +10,7 @@ import { transfer } from "@globus/sdk/cjs";
  *  Returns a json file that is that holds the data for a list of Globus endpoints matching
  *      the 'endpointString' input.
  *  Note: the limit variable in the query dictates the max number of items returned
-*/
+ */
 export async function searchGlobusEndpoints(endpointString, manager) {
     const query = endpointString.currentTarget.value;
     if (!query) {

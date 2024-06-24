@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useReducer, createContext, useContext } 
 import {
   Box, Center, Container, Flex,
   IconButton, Input, InputGroup, InputLeftAddon,
-  Text, Icon, InputRightElement, Button,
+  Text, Icon, InputRightElement, Button, useToast,
   SimpleGrid, useDisclosure, Drawer, DrawerBody,
   DrawerContent, DrawerHeader, DrawerOverlay, Card,
-  CardBody, Spacer, Link, useToast
+  CardBody, Spacer, Link, ToastProvider, ChakraProvider,
 } from "@chakra-ui/react";
 import {
   PlayCircleIcon,
@@ -17,8 +17,6 @@ import { transfer, webapp } from "@globus/sdk/cjs";
 import FileBrowser from "../file-browser/FileBrowser";
 import { useOAuthContext } from "../globus-api/GlobusOAuthProvider";
 import { CollectionSearch } from "./CollectionSearch";
-
-import { submitGlobusTransfer } from "../globus-api/submitGlobusTransfer";
 
 /*
  * Displays both endpoints and the current directory contents
@@ -84,18 +82,64 @@ export const transferSettingsReducer = (state, action) => {
   }
 };
 
+function isDirectory(entry) {
+  return entry.type === "dir";
+}
+
 export default function Home({transferCollection, transferPath}) {
   const auth = useOAuthContext();
   const [transferSettings, dispatch] = useReducer(
     transferSettingsReducer,
     initialState
   );
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
-  // Current WIP to seperate the transfer call to another file
-  async function submitGlobusTransferWrapper(){
-    const response = await submitGlobusTransfer(transferSettings, auth);
+  const getTransferHeaders = useCallback(() => {
+    return {
+      Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
+    };
+  }, [auth.authorization?.tokens.transfer?.access_token]);
+
+  async function handleStartTransfer() {
+    if (
+      !transferSettings.endpoint_one ||
+      !transferSettings.file_path_one ||
+      !transferSettings.file_path_two ||
+      !transferSettings.endpoint_two
+    ) {
+      return;
+    }
+
+    const id = await (
+      await transfer.taskSubmission.submissionId({
+        headers: {
+          ...getTransferHeaders(),
+        },
+      })
+    ).json();
+
+    // Transfer language is unidirectional, but should be direction-agnostic elsewhere
+    //    to support bi-directional transfers
+    const response = await transfer.taskSubmission.submitTransfer({
+      payload: {
+        submission_id: id.value,
+        label: `Transfer from ${transferSettings.endpoint_one.id}`,
+        source_endpoint: transferSettings.endpoint_one.id,
+        destination_endpoint: transferSettings.endpoint_two.id,
+        DATA: transferSettings.items.map((item) => {
+          return {
+            DATA_TYPE: "transfer_item",
+            source_path: `${transferSettings.file_path_one}${item.name}`,
+            destination_path: `${transferSettings.file_path_two}${item.name}`,
+            recursive: isDirectory(item),
+          };
+        }),
+      },
+      headers: {
+        ...getTransferHeaders(),
+      },
+    });
 
     const data = await response.json();
 
@@ -132,14 +176,6 @@ export default function Home({transferCollection, transferPath}) {
     }
   }
 
-
-  const getTransferHeaders = useCallback(() => {
-    return {
-      Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
-    };
-  }, [auth.authorization?.tokens.transfer?.access_token]);
-
-
   useEffect(() => {
     async function fetchCollection() {
       if (!auth.isAuthenticated) {
@@ -170,127 +206,133 @@ export default function Home({transferCollection, transferPath}) {
   const { endpoint_one, endpoint_two } = transferSettings;
 
   return (
-    <TransferContext.Provider value={transferSettings}>
-      <TransferDispatchContext.Provider value={dispatch}>
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={1}>
-          <Box p={2}>
-            <Box p={2}>
-              <InputGroup>
-                <InputLeftAddon>endpoint_one</InputLeftAddon>
-                <Input
-                  value={endpoint_one ? endpoint_one.display_name || endpoint_one.name : "..."}
-                  variant="filled"
-                  isReadOnly
-                />
-              </InputGroup>
-            </Box>
-            <FileBrowser
-              variant="endpoint_one"
-              collection={transferCollection}
-              path={transferPath}
-            />
-          </Box>
-          {endpoint_two ? (
+    <ChakraProvider
+        toastOptions={{
+          defaultOptions: { position: "bottom-right", duration: null },
+        }}
+    >
+      <TransferContext.Provider value={transferSettings}>
+        <TransferDispatchContext.Provider value={dispatch}>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={1}>
             <Box p={2}>
               <Box p={2}>
                 <InputGroup>
-                  <InputLeftAddon>endpoint_two</InputLeftAddon>
+                  <InputLeftAddon>Endpoint one:</InputLeftAddon>
                   <Input
-                    value={endpoint_two.display_name || endpoint_two.name}
+                    value={endpoint_one ? endpoint_one.display_name || endpoint_one.name : "..."}
+                    variant="filled"
+                    isReadOnly
                   />
-                  <InputRightElement>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      isRound
-                      aria-label="Clear"
-                      colorScheme="gray"
-                      icon={<Icon as={XCircleIcon} boxSize={6} />}
-                      onClick={() => {
-                        dispatch({ type: "SET_ENDPOINT_TWO", payload: null });
-                        dispatch({
-                          type: "SET_FILE_PATH_TWO",
-                          payload: null,
-                        });
-                      }}
-                    />
-                  </InputRightElement>
                 </InputGroup>
               </Box>
               <FileBrowser
-                variant="endpoint_two"
-                collection={endpoint_two.id}
+                variant="endpoint_one"
+                collection={transferCollection}
+                path={transferPath}
               />
             </Box>
-          ) : (
-            <Box p={4}>
-              <Container>
-                <Card variant="filled" size="sm">
-                  <CardBody>
-                    <Text pb={2}>
-                      You are viewing data made available by{" "}
-                      {endpoint_one?.display_name}.
-                      <br /> To transfer data to another location,{" "}
-                      <Button onClick={onOpen} variant="link">
-                        search for a endpoint_two
-                      </Button>
-                      .
-                    </Text>
-                  </CardBody>
-                </Card>
-              </Container>
-
-              <Drawer
-                placement="right"
-                onClose={onClose}
-                isOpen={isOpen}
-                size="lg"
-              >
-                <DrawerOverlay />
-                <DrawerContent bg="white">
-                  <DrawerHeader borderBottomWidth="1px">
-                    Search for a endpoint_two
-                  </DrawerHeader>
-                  <DrawerBody>
-                    <CollectionSearch
-                      onSelect={(endpoint) => {
-                        dispatch({
-                          type: "SET_ENDPOINT_TWO",
-                          payload: endpoint,
-                        });
-                        dispatch({
-                          type: "SET_FILE_PATH_TWO",
-                          payload: endpoint.default_directory,
-                        });
-                      }}
+            {endpoint_two ? (
+              <Box p={2}>
+                <Box p={2}>
+                  <InputGroup>
+                    <InputLeftAddon>Endpoint two</InputLeftAddon>
+                    <Input
+                      value={endpoint_two.display_name || endpoint_two.name}
                     />
-                  </DrawerBody>
-                </DrawerContent>
-              </Drawer>
+                    <InputRightElement>
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        isRound
+                        aria-label="Clear"
+                        colorScheme="gray"
+                        icon={<Icon as={XCircleIcon} boxSize={6} />}
+                        onClick={() => {
+                          dispatch({ type: "SET_ENDPOINT_TWO", payload: null });
+                          dispatch({
+                            type: "SET_FILE_PATH_TWO",
+                            payload: null,
+                          });
+                        }}
+                      />
+                    </InputRightElement>
+                  </InputGroup>
+                </Box>
+                <FileBrowser
+                  variant="endpoint_two"
+                  collection={endpoint_two.id}
+                />
+              </Box>
+            ) : (
+              <Box p={4}>
+                <Container>
+                  <Card variant="filled" size="sm">
+                    <CardBody>
+                      <Text pb={2}>
+                        You are viewing data made available by{" "}
+                        {endpoint_one?.display_name}.
+                        <br /> To transfer data to another location,{" "}
+                        <Button onClick={onOpen} variant="link">
+                          search for a endpoint two
+                        </Button>
+                        .
+                      </Text>
+                    </CardBody>
+                  </Card>
+                </Container>
+
+                <Drawer
+                  placement="right"
+                  onClose={onClose}
+                  isOpen={isOpen}
+                  size="lg"
+                >
+                  <DrawerOverlay />
+                  <DrawerContent bg="white">
+                    <DrawerHeader borderBottomWidth="1px">
+                      Search for endpoint two
+                    </DrawerHeader>
+                    <DrawerBody>
+                      <CollectionSearch
+                        onSelect={(endpoint) => {
+                          dispatch({
+                            type: "SET_ENDPOINT_TWO",
+                            payload: endpoint,
+                          });
+                          dispatch({
+                            type: "SET_FILE_PATH_TWO",
+                            payload: endpoint.default_directory,
+                          });
+                        }}
+                      />
+                    </DrawerBody>
+                  </DrawerContent>
+                </Drawer>
+              </Box>
+            )}
+          </SimpleGrid>
+
+          {endpoint_one && endpoint_two && (
+            <Box position="sticky" bottom={0} bgColor="white">
+              <Flex py={2} px={20} align="center">
+                <Text fontSize="sm">
+                  <Text as="strong">{transferSettings.items.length}</Text> items
+                  selected
+                </Text>
+                <Spacer />
+                <Button
+                  onClick={() => handleStartTransfer()}
+                  isDisabled={!endpoint_one || !endpoint_two}
+                  leftIcon={<Icon as={PlayCircleIcon} boxSize={6} />}
+                >
+                  Start Transfer
+                </Button>
+              </Flex>
             </Box>
           )}
-        </SimpleGrid>
-
-        {endpoint_one && endpoint_two && (
-          <Box position="sticky" bottom={0} bgColor="white">
-            <Flex py={2} px={20} align="center">
-              <Text fontSize="sm">
-                <Text as="strong">{transferSettings.items.length}</Text> items
-                selected
-              </Text>
-              <Spacer />
-              <Button
-                onClick={() => submitGlobusTransferWrapper()}
-                isDisabled={!endpoint_one || !endpoint_two}
-                leftIcon={<Icon as={PlayCircleIcon} boxSize={6} />}
-              >
-                Start Transfer
-              </Button>
-            </Flex>
-          </Box>
-        )}
-      </TransferDispatchContext.Provider>
-    </TransferContext.Provider>
+        </TransferDispatchContext.Provider>
+      </TransferContext.Provider>
+    </ChakraProvider>
   );
 }
 

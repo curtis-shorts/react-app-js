@@ -1,6 +1,7 @@
 // handleStartTransfer.js
 
-import { transfer, webapp } from "@globus/sdk/cjs";
+import { useCallback } from "react";
+import { transfer } from "@globus/sdk/cjs";
 
 function isDirectory(entry) {
     return entry.type === "dir";
@@ -10,8 +11,8 @@ export async function submitGlobusTransfer(transferSettings, manager) {
   if (
     !transferSettings.endpoint_one ||
     !transferSettings.file_path_one ||
-    !transferSettings.file_path_two ||
-    !transferSettings.endpoint_two
+    !transferSettings.endpoint_two ||
+    !transferSettings.file_path_two
   ) {
     return;
   }
