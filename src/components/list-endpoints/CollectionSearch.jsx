@@ -15,7 +15,7 @@ import { useOAuthContext } from "../globus-api/GlobusOAuthProvider";
 import { searchGlobusEndpoints } from "../globus-api/searchGlobusEndpoints";
 
 /*
- * Returns the collection list popup menu which can be used for collection selection
+ * Returns the collection list popup menu which can be used for collection (endpoint) selection
  */
 
 export const CollectionSearch = ({ onSelect = () => {} }) => {

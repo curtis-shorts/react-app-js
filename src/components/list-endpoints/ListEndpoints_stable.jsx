@@ -95,12 +95,6 @@ export default function Home({transferCollection, transferPath}) {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const getTransferHeaders = useCallback(() => {
-    return {
-      Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
-    };
-  }, [auth.authorization?.tokens.transfer?.access_token]);
-
   async function handleStartTransfer() {
     if (
       !transferSettings.endpoint_one ||
@@ -114,7 +108,7 @@ export default function Home({transferCollection, transferPath}) {
     const id = await (
       await transfer.taskSubmission.submissionId({
         headers: {
-          ...getTransferHeaders(),
+          Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
         },
       })
     ).json();
@@ -137,7 +131,7 @@ export default function Home({transferCollection, transferPath}) {
         }),
       },
       headers: {
-        ...getTransferHeaders(),
+        Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
       },
     });
 
@@ -183,7 +177,7 @@ export default function Home({transferCollection, transferPath}) {
       }
       const response = await transfer.endpoint.get(transferCollection, {
         headers: {
-          ...getTransferHeaders(),
+          Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
         },
       });
       const data = await response.json();
@@ -191,7 +185,7 @@ export default function Home({transferCollection, transferPath}) {
       dispatch({ type: "SET_FILE_PATH_ONE", payload: data.default_directory });
     }
     fetchCollection();
-  }, [auth.isAuthenticated, getTransferHeaders]);
+  }, [auth]);
 
   if (!auth.isAuthenticated) {
     return (

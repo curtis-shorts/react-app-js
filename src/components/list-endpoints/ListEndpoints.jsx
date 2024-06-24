@@ -1,23 +1,17 @@
 import React, { useCallback, useEffect, useReducer, createContext, useContext } from "react";
 import {
-  Box, Center, Container, Flex,
-  IconButton, Input, InputGroup, InputLeftAddon,
-  Text, Icon, InputRightElement, Button, useToast,
-  SimpleGrid, useDisclosure, Drawer, DrawerBody,
-  DrawerContent, DrawerHeader, DrawerOverlay, Card,
-  CardBody, Spacer, Link, ChakraProvider,
+  Box, Center, Container, Flex, IconButton, Input, InputGroup, InputLeftAddon,
+  Text, Icon, InputRightElement, Button, useToast, SimpleGrid, useDisclosure, Drawer, DrawerBody,
+  DrawerContent, DrawerHeader, DrawerOverlay, Card, CardBody, Spacer, Link, ChakraProvider,
 } from "@chakra-ui/react";
-import {
-  PlayCircleIcon,
-  XCircleIcon,
-  ArrowTopRightOnSquareIcon,
-} from "@heroicons/react/24/outline";
+import { PlayCircleIcon, XCircleIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { transfer, webapp } from "@globus/sdk/cjs";
 
 import FileBrowser from "../file-browser/FileBrowser";
 import { useOAuthContext } from "../globus-api/GlobusOAuthProvider";
 import { CollectionSearch } from "./CollectionSearch";
 import { submitGlobusTransfer } from "../globus-api/submitGlobusTransfer";
+import { fetchCollection } from "./fetchCollection";
 
 /*
  * Displays both endpoints and the current directory contents
@@ -99,12 +93,14 @@ export default function Home({transferCollection, transferPath}) {
   }, [auth.authorization?.tokens.transfer?.access_token]);
 
   async function handleStartTransfer() {
-    const [response, data] = await submitGlobusTransfer(transferSettings, getTransferHeaders)
+    // Submit the transfer request
+    const data = await submitGlobusTransfer(transferSettings, getTransferHeaders)
 
-    if (response === null) {
+    // Toast handler for the response
+    if (data === null) {
       console.log("Response returned NULL");
       return;
-    } else if (response.ok) {
+    } else if (data.code === "Accepted") {
       toast({
         title: data.code,
         description: (
@@ -137,22 +133,10 @@ export default function Home({transferCollection, transferPath}) {
     }
   }
 
+  // Updates the collection whenever the authentication state changes
   useEffect(() => {
-    async function fetchCollection() {
-      if (!auth.isAuthenticated) {
-        return;
-      }
-      const response = await transfer.endpoint.get(transferCollection, {
-        headers: {
-          ...getTransferHeaders(),
-        },
-      });
-      const data = await response.json();
-      dispatch({ type: "SET_ENDPOINT_ONE", payload: data });
-      dispatch({ type: "SET_FILE_PATH_ONE", payload: data.default_directory });
-    }
-    fetchCollection();
-  }, [auth.isAuthenticated, getTransferHeaders]);
+    fetchCollection(auth, transferCollection, dispatch);
+  }, [auth.isAuthenticated]);
 
   if (!auth.isAuthenticated) {
     return (
