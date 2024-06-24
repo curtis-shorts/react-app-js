@@ -5,7 +5,7 @@ import {
   Text, Icon, InputRightElement, Button, useToast,
   SimpleGrid, useDisclosure, Drawer, DrawerBody,
   DrawerContent, DrawerHeader, DrawerOverlay, Card,
-  CardBody, Spacer, Link, ChakraProvider,
+  CardBody, Spacer, Link, ToastProvider, ChakraProvider,
 } from "@chakra-ui/react";
 import {
   PlayCircleIcon,
@@ -17,7 +17,6 @@ import { transfer, webapp } from "@globus/sdk/cjs";
 import FileBrowser from "../file-browser/FileBrowser";
 import { useOAuthContext } from "../globus-api/GlobusOAuthProvider";
 import { CollectionSearch } from "./CollectionSearch";
-import { submitGlobusTransfer } from "../globus-api/submitGlobusTransfer";
 
 /*
  * Displays both endpoints and the current directory contents
@@ -83,6 +82,10 @@ export const transferSettingsReducer = (state, action) => {
   }
 };
 
+function isDirectory(entry) {
+  return entry.type === "dir";
+}
+
 export default function Home({transferCollection, transferPath}) {
   const auth = useOAuthContext();
   const [transferSettings, dispatch] = useReducer(
@@ -99,12 +102,48 @@ export default function Home({transferCollection, transferPath}) {
   }, [auth.authorization?.tokens.transfer?.access_token]);
 
   async function handleStartTransfer() {
-    const [response, data] = await submitGlobusTransfer(transferSettings, getTransferHeaders)
-
-    if (response === null) {
-      console.log("Response returned NULL");
+    if (
+      !transferSettings.endpoint_one ||
+      !transferSettings.file_path_one ||
+      !transferSettings.file_path_two ||
+      !transferSettings.endpoint_two
+    ) {
       return;
-    } else if (response.ok) {
+    }
+
+    const id = await (
+      await transfer.taskSubmission.submissionId({
+        headers: {
+          ...getTransferHeaders(),
+        },
+      })
+    ).json();
+
+    // Transfer language is unidirectional, but should be direction-agnostic elsewhere
+    //    to support bi-directional transfers
+    const response = await transfer.taskSubmission.submitTransfer({
+      payload: {
+        submission_id: id.value,
+        label: `Transfer from ${transferSettings.endpoint_one.id}`,
+        source_endpoint: transferSettings.endpoint_one.id,
+        destination_endpoint: transferSettings.endpoint_two.id,
+        DATA: transferSettings.items.map((item) => {
+          return {
+            DATA_TYPE: "transfer_item",
+            source_path: `${transferSettings.file_path_one}${item.name}`,
+            destination_path: `${transferSettings.file_path_two}${item.name}`,
+            recursive: isDirectory(item),
+          };
+        }),
+      },
+      headers: {
+        ...getTransferHeaders(),
+      },
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
       toast({
         title: data.code,
         description: (
@@ -249,7 +288,7 @@ export default function Home({transferCollection, transferPath}) {
                   size="lg"
                 >
                   <DrawerOverlay />
-                  <DrawerContent>
+                  <DrawerContent bg="white">
                     <DrawerHeader borderBottomWidth="1px">
                       Search for endpoint two
                     </DrawerHeader>

@@ -38,7 +38,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <GlobusSessionManager />
       <ListEndpoints
         transferCollection={collection}
-        transferPath='/home/cushorts'
+        transferPath='/home/cushorts/scratch/globus_transfer_test_data'
       />
     </React.StrictMode>
   </GlobusOAuthProvider>
