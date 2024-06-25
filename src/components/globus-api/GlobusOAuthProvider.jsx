@@ -2,9 +2,6 @@ import React, { useState, useReducer, useEffect, useContext } from "react";
 import { createContext } from "react";
 import { authorization } from "@globus/sdk/cjs";
 
-//import { reducer } from "./reducer";
-//import GlobusAuthState from "../globus-auth-context/DefaultAuthState";
-
 class DefaultAuthState {
   constructor() {
     this.isAuthenticated = false;
@@ -15,7 +12,7 @@ class DefaultAuthState {
   }
 }
 
-const reducer = (state, action) => {
+const OAuthReducer = (state, action) => {
   // state: Globus authentication class
   // action = { type: "AUTHENTICATED"; payload: boolean } | { type: "REVOKE" }
   const AUTHENTICATED = "AUTHENTICATED";
@@ -54,7 +51,7 @@ const GlobusOAuthProvider = ({
 }) => {
   const initialState = DefaultAuthState;
 
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(OAuthReducer, initialState);
   const [instance, setInstance] = useState(undefined);
 
   useEffect(() => {

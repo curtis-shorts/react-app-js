@@ -10,6 +10,7 @@ import GlobusApp from './MyGlobusApp.jsx';
 // Runs the static data portal transfer UI example retrieved from:
 //    https://github.com/globus/static-data-portal
 import ListEndpoints from './components/list-endpoints/ListEndpoints.jsx';
+import GlobusTransferProvider from './components/globus-api/GlobusTransferProvider.jsx';
 
 // Set the default values
 const redirect = window.location.origin + window.location.pathname
@@ -36,10 +37,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
       <h1>Globus Example 1:</h1>
       <GlobusSessionManager />
-      <ListEndpoints
-        transferCollection={collection}
-        transferPath='/home/cushorts/scratch/globus_transfer_test_data'
-      />
+      <GlobusTransferProvider>
+        <ListEndpoints
+          transferCollection={collection}
+          transferPath='/home/cushorts/scratch/globus_transfer_test_data'
+        />
+      </GlobusTransferProvider>
     </React.StrictMode>
   </GlobusOAuthProvider>
 )

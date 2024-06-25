@@ -57,7 +57,7 @@ export function isDirectory(entry) {
 
 import FileEntryIcon from "./FileEntryIcon";
 //import { TransferSettingsDispatchContext } from "../list-endpoints/Context";
-import { useTransferDispatchContext } from "../list-endpoints/ListEndpoints";
+import { useTransferDispatchContext } from "../globus-api/GlobusTransferProvider";
 
 import { FileBrowserContext } from "./Context";
 

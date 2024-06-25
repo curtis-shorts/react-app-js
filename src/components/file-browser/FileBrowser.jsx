@@ -9,7 +9,7 @@ import { ArrowPathIcon, ArrowUturnUpIcon, FolderPlusIcon, } from "@heroicons/rea
 import { transfer } from "@globus/sdk/cjs";
 
 import { useOAuthContext } from "../globus-api/GlobusOAuthProvider";
-import { useTransferDispatchContext } from "../list-endpoints/ListEndpoints";
+import { useTransferDispatchContext } from "../globus-api/GlobusTransferProvider";
 import FileBrowserViewMenu from "./FileBrowserViewMenu";
 import FileBrowserError from "./FileBrowserError";
 
