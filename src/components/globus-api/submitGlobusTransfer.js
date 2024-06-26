@@ -4,7 +4,7 @@ function isDirectory(entry) {
     return entry.type === "dir";
 }
 
-export async function submitGlobusTransfer(transferSettings, getTransferHeaders) {
+export async function submitGlobusTransfer(transferSettings, contextManager) {
     // Make sure the transfer settings are well defined
     if (
         !transferSettings.endpoint_one ||
@@ -19,7 +19,7 @@ export async function submitGlobusTransfer(transferSettings, getTransferHeaders)
     const id = await (
         await transfer.taskSubmission.submissionId({
           headers: {
-            ...getTransferHeaders(),
+            Authorization: `Bearer ${contextManager.authorization?.tokens.transfer?.access_token}`,
           },
         })
     ).json();
@@ -42,7 +42,7 @@ export async function submitGlobusTransfer(transferSettings, getTransferHeaders)
                 }),
             },
             headers: {
-                ...getTransferHeaders(),
+                Authorization: `Bearer ${contextManager.authorization?.tokens.transfer?.access_token}`,
             },
         })
     ).json();

@@ -26,15 +26,9 @@ export default function Home({transferCollection, transferPath}) {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const getTransferHeaders = useCallback(() => {
-    return {
-      Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
-    };
-  }, [auth.authorization?.tokens.transfer?.access_token]);
-
   async function handleStartTransfer() {
     // Submit the transfer request
-    const data = await submitGlobusTransfer(transferSettings, getTransferHeaders)
+    const data = await submitGlobusTransfer(transferSettings, auth)
 
     // Toast handler for the response
     if (data === null) {

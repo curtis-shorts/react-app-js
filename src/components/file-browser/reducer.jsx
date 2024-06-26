@@ -1,4 +1,4 @@
-type Action = { type: string; payload?: any };
+/*type Action = { type: string; payload?: any };
 type State = {
   view: {
     columns: string[];
@@ -42,4 +42,40 @@ export default function fileBrowserReducer(
       throw Error("Unknown action: " + action.type);
     }
   }
+}*/
+
+const initialState = {
+  view: {
+    show_hidden: false,
+    columns: ["name", "last_modified", "size"],
+  },
+};
+
+function fileBrowserReducer(state = initialState, action) {
+  switch (action.type) {
+    case "SET_VIEW_COLUMNS": {
+      return {
+        ...state,
+        view: {
+          ...state.view,
+          columns: action.payload,
+        },
+      };
+    }
+    case "SET_VIEW_SHOW_HIDDEN": {
+      return {
+        ...state,
+        view: {
+          ...state.view,
+          show_hidden: action.payload,
+        },
+      };
+    }
+    default: {
+      throw new Error("Unknown action: " + action.type);
+    }
+  }
 }
+
+export { initialState, fileBrowserReducer };
+

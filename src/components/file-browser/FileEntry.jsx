@@ -1,26 +1,52 @@
-import React, { MouseEventHandler, useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import {
-  Button,
-  Checkbox,
-  HStack,
-  Icon,
-  IconButton,
-  Menu,
-  MenuItem,
-  MenuList,
-  Spinner,
-  Td,
-  Text,
-  Tooltip,
-  Tr,
+  Button, Checkbox, HStack, Icon, IconButton, Menu,
+  MenuItem, MenuList, Spinner, Td, Text, Tooltip, Tr,
 } from "@chakra-ui/react";
 import { ArrowUpOnSquareIcon } from "@heroicons/react/24/outline";
 
-import type { FileDocument } from "@globus/sdk/cjs/lib/services/transfer/service/file-operations";
 import FileNameForm from "./FileNameForm";
-import { isDirectory, readable } from "@/utils/globus";
+//import { isDirectory, readable } from "../list-endpoints/globus";
+
+const KB = 1000;
+const MB = KB * 1000;
+const GB = MB * 1000;
+const TB = GB * 1000;
+const PB = TB * 1000;
+
+export function readable(bytes, truncate = 2) {
+  let unit = "B";
+  let bytesInUnit = 1;
+  if (bytes < KB) {
+    return `${bytes} ${unit}`;
+  } else if (bytes < MB) {
+    unit = "KB";
+    bytesInUnit = KB;
+  } else if (bytes < GB) {
+    unit = "MB";
+    bytesInUnit = MB;
+  } else if (bytes < TB) {
+    unit = "GB";
+    bytesInUnit = GB;
+  } else if (bytes < PB) {
+    unit = "TB";
+    bytesInUnit = TB;
+  } else {
+    unit = "PB";
+    bytesInUnit = PB;
+  }
+  const value = bytes / bytesInUnit;
+  return `${value.toFixed(truncate)} ${unit}`;
+}
+
+export function isDirectory(entry) {
+  return entry.type === "dir";
+}
+
 import FileEntryIcon from "./FileEntryIcon";
-import { TransferSettingsDispatchContext } from "../transfer-settings-context/Context";
+//import { TransferSettingsDispatchContext } from "../list-endpoints/Context";
+import { useTransferDispatchContext } from "../globus-api/GlobusTransferProvider";
+
 import { FileBrowserContext } from "./Context";
 
 export default function FileEntry({
@@ -30,23 +56,17 @@ export default function FileEntry({
   absolutePath,
   openDirectory,
   handleRename,
-}: {
-  item: FileDocument;
-  endpoint: Record<string, any> | null;
-  isSource: boolean;
-  absolutePath: string;
-  openDirectory: () => void;
-  handleRename: (name: string) => void;
 }) {
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showEditView, setShowEditView] = useState(false);
-  const menuRef = React.useRef<HTMLTableRowElement>(null);
-  const transferSettingsDispatch = useContext(TransferSettingsDispatchContext);
+  const menuRef = React.useRef(null);
+
+  //const transferSettingsDispatch = useContext(TransferSettingsDispatchContext);
+  const transferSettingsDispatch = useTransferDispatchContext();
+
   const fileBrowser = useContext(FileBrowserContext);
-  const displayContextMenu: MouseEventHandler<
-    HTMLButtonElement | HTMLParagraphElement
-  > = (event) => {
+  const displayContextMenu = (event) => {
     if (!isSource && !showEditView) {
       event.preventDefault();
       setContextMenuOpen(true);
@@ -63,20 +83,15 @@ export default function FileEntry({
 
   return (
     <Tr onContextMenu={displayContextMenu}>
-      {isSource && (
+      {/*transfer checkbox for source*/ isSource && (
         <Td>
           <Checkbox
+            size="lg"
             onChange={(e) => {
               if (e.target.checked) {
-                transferSettingsDispatch({
-                  type: "ADD_ITEM",
-                  payload: item,
-                });
+                transferSettingsDispatch({ type: "ADD_ITEM", payload: item });
               } else {
-                transferSettingsDispatch({
-                  type: "REMOVE_ITEM",
-                  payload: item,
-                });
+                transferSettingsDispatch({ type: "REMOVE_ITEM", payload: item });
               }
             }}
           />
@@ -84,28 +99,29 @@ export default function FileEntry({
       )}
       <Td>
         <HStack>
-          {!showEditView && <FileEntryIcon entry={item} />}
-          {isLoading ? (
-            <Spinner ml={2} />
-          ) : showEditView ? (
-            <FileNameForm
-              onSubmit={async (name: string) => {
-                setIsLoading(true);
-                await handleRename(name);
-                setIsLoading(false);
-              }}
-              label={isDirectory(item) ? "Folder Name" : "File Name"}
-              icon={<FileEntryIcon entry={item} />}
-              toggleShowForm={setShowEditView}
-              initialValue={item.name}
-            />
-          ) : isDirectory(item) ? (
-            <Button textColor="black" variant="link" onClick={openDirectory}>
-              {item.name}
-            </Button>
-          ) : (
-            <Text textColor="black">{item.name}</Text>
-          )}
+          {/*Show a file or folder icon*/ !showEditView && <FileEntryIcon entry={item} />}
+          {isLoading ? /*Loading spinner*/(
+              <Spinner ml={2} /> 
+            ) : /*edit view*/ showEditView ? (
+              <FileNameForm
+                onSubmit={async (name) => {
+                  setIsLoading(true);
+                  await handleRename(name);
+                  setIsLoading(false);
+                }}
+                label={isDirectory(item) ? "Folder Name" : "File Name"}
+                icon={<FileEntryIcon entry={item} />}
+                toggleShowForm={setShowEditView}
+                initialValue={item.name}
+              />
+            ) : /*directory*/ isDirectory(item) ? (
+              <Button textColor="black" variant="link" onClick={openDirectory}>
+                {item.name}
+              </Button>
+            ) : /*file*/ (
+              <Text textColor="black">{item.name}</Text>
+            )
+          }
         </HStack>
       </Td>
       {includeLastModified && (

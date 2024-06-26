@@ -14,7 +14,7 @@ import FileBrowserViewMenu from "./FileBrowserViewMenu";
 import FileBrowserError from "./FileBrowserError";
 
 import { FileBrowserContext, FileBrowserDispatchContext } from "./Context";
-import fileBrowserReducer, { initialState } from "./reducer";
+import { fileBrowserReducer, initialState } from "./reducer";
 import FileNameForm from "./FileNameForm";
 import FileEntry from "./FileEntry";
 import { fetchEndpoint } from "./fetchEndpoint";
@@ -38,7 +38,10 @@ export default function FileBrowser({ variant, collection, path }) {
   const toast = useToast();
 
   useEffect(() => {
+    console.log("Endpoint 1:", endpoint);
     fetchEndpoint(auth, collection, setEndpoint);
+    console.log("Collection:", collection);
+    console.log("Endpoint 2:", endpoint);
   }, [auth, collection]);
 
   const fetchItems = useCallback(async () => {
@@ -52,6 +55,7 @@ export default function FileBrowser({ variant, collection, path }) {
         type: "RESET_ITEMS",
       });
     }
+
     const response = await transfer.fileOperations.ls(collection, {
       headers: {
         Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
@@ -61,6 +65,7 @@ export default function FileBrowser({ variant, collection, path }) {
         show_hidden: fileBrowser.view.show_hidden ? "true" : "false",
       },
     });
+    
     const data = await response.json();
     setIsLoading(false);
     setLsResponse(data);
