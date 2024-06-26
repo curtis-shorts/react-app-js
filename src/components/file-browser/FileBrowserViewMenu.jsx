@@ -65,7 +65,7 @@ import {
   MenuDivider,
 } from "@chakra-ui/react";
 
-import { FileBrowserContext, FileBrowserDispatchContext } from "./Context";
+import { FileBrowserContext, FileBrowserDispatchContext } from "./FileBrowser";
 
 export default function FileBrowserViewMenu() {
   const state = useContext(FileBrowserContext);

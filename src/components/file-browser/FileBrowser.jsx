@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useReducer, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useState, createContext } from "react";
 import {
-  Table, TableContainer, Tr, Th, Td, Thead, Code,
-  Icon, Button, Box, Spinner, Center, Tbody,
-  ButtonGroup, Flex, Spacer, useToast,
+  Table, TableContainer, Tr, Th, Td, Thead, Code, Icon, Button,
+  Box, Spinner, Center, Tbody, ButtonGroup, Flex, Spacer, useToast,
 } from "@chakra-ui/react";
 import { ChevronRightIcon } from "@chakra-ui/icons";
 import { ArrowPathIcon, ArrowUturnUpIcon, FolderPlusIcon, } from "@heroicons/react/24/outline";
@@ -13,11 +12,52 @@ import { useTransferDispatchContext } from "../globus-api/GlobusTransferProvider
 import FileBrowserViewMenu from "./FileBrowserViewMenu";
 import FileBrowserError from "./FileBrowserError";
 
-import { FileBrowserContext, FileBrowserDispatchContext } from "./Context";
-import { fileBrowserReducer, initialState } from "./reducer";
 import FileNameForm from "./FileNameForm";
 import FileEntry from "./FileEntry";
 import { fetchEndpoint } from "./fetchEndpoint";
+
+
+
+
+
+const initialState = {
+  view: {
+    show_hidden: false,
+    columns: ["name", "last_modified", "size"],
+  },
+};
+
+function fileBrowserReducer(state = initialState, action) {
+  switch (action.type) {
+    case "SET_VIEW_COLUMNS": {
+      return {
+        ...state,
+        view: {
+          ...state.view,
+          columns: action.payload,
+        },
+      };
+    }
+    case "SET_VIEW_SHOW_HIDDEN": {
+      return {
+        ...state,
+        view: {
+          ...state.view,
+          show_hidden: action.payload,
+        },
+      };
+    }
+    default: {
+      throw new Error("Unknown action: " + action.type);
+    }
+  }
+}
+
+
+export const FileBrowserContext = createContext(initialState);
+export const FileBrowserDispatchContext = createContext(() => {});
+
+
 
 export default function FileBrowser({ variant, collection, path }) {
   const auth = useOAuthContext();

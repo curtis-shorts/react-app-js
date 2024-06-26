@@ -47,7 +47,7 @@ import FileEntryIcon from "./FileEntryIcon";
 //import { TransferSettingsDispatchContext } from "../list-endpoints/Context";
 import { useTransferDispatchContext } from "../globus-api/GlobusTransferProvider";
 
-import { FileBrowserContext } from "./Context";
+import { FileBrowserContext } from "./FileBrowser";
 
 export default function FileEntry({
   item,
