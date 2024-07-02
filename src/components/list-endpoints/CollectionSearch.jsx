@@ -1,37 +1,33 @@
 import React, { useState } from "react";
-import {
-  Box,
-  Input,
-  InputGroup,
-  Stack,
-  Card,
-  CardHeader,
-  CardBody,
-  Text,
-  List,
-  ListItem,
-} from "@chakra-ui/react";
+import { Box, Input, InputGroup, Stack, Card, CardHeader, CardBody, Text, List, ListItem } from "@chakra-ui/react";
 import { useOAuthContext } from "../globus-api/GlobusOAuthProvider";
 import { searchGlobusEndpoints } from "../globus-api/searchGlobusEndpoints";
 
 /*
- * Returns the collection list popup menu which can be used for collection (endpoint) selection
- */
+ * Displays an endpoint/collection search menu in a popup on the right side of the screen
+ * User inputs a string which all matching endpoints of are called
+ * Returns the metadata for the endpoint that the user selects
+*/
 
 export const CollectionSearch = ({ onSelect = () => {} }) => {
   const manager = useOAuthContext();
   const [results, setResults] = useState([]);
 
+  // Wrapper to call the Globus API for endpoint searches
   async function handleSearchWrapper(endpointString) {
-    const returnVal = await searchGlobusEndpoints(endpointString, manager)
-    console.log(returnVal)
-    if (returnVal !== null){
-      setResults(returnVal.DATA)
+    // Call the endpoint search API
+    const data = await searchGlobusEndpoints(endpointString, manager)
+    
+    // Handle empty return case
+    if (data !== null){
+      setResults(data.DATA)
     } else {
       setResults([])
     }
   }
 
+  // Searches for endpoints that match the string given and displays their metadata in cards
+  // Returns the metadata for the endpoint to the calling function when the endpoint's card is selected
   return (
     <Stack>
       <Box position="sticky" top="0" zIndex={1} bgColor="white">

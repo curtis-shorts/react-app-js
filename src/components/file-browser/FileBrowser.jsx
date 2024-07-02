@@ -14,10 +14,10 @@ import FileBrowserError from "./FileBrowserError";
 
 import FileNameForm from "./FileNameForm";
 import FileEntry from "./FileEntry";
-import { fetchEndpoint } from "./fetchEndpoint";
+import { fetchEndpoint } from "../globus-api/fetchEndpoint";
 
 
-
+// Handles the viewing of files in an endpoint/collection
 
 
 const initialState = {
@@ -77,11 +77,9 @@ export default function FileBrowser({ variant, collection, path }) {
   const [error, setError] = useState(null);
   const toast = useToast();
 
+  // Collection state metadata
   useEffect(() => {
-    console.log("Endpoint 1:", endpoint);
-    fetchEndpoint(auth, collection, setEndpoint);
-    console.log("Collection:", collection);
-    console.log("Endpoint 2:", endpoint);
+    setEndpoint(fetchEndpoint(auth, collection));
   }, [auth, collection]);
 
   const fetchItems = useCallback(async () => {
