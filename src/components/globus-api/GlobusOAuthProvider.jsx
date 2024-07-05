@@ -6,10 +6,11 @@ import { authorization } from "@globus/sdk/cjs";
  *    GlobusOAuthProvider
  * Description:
  *    Provides a Globus authorization context which can be used for making requests
+ *    To register a thick client with Globus, go to https://app.globus.org/settings/developers/registration/public_installed_client
  * Inputs:
- *    redirect
- *    client
- *    scopes
+ *    redirect - the client-side url registered to recieve authorization through Globus 
+ *    client - the UUID of the client registered to globus
+ *    scopes - the scope of requests the client wants access to (should use 'urn:globus:auth:scope:transfer.api.globus.org:all')
  * Usage:
  *    <GlobusOAuthProvider
  *      redirect={redirect}
@@ -23,6 +24,12 @@ import { authorization } from "@globus/sdk/cjs";
  * Globus SDK documentation:
  *    https://globus.github.io/globus-sdk-javascript/functions/_globus_sdk.Authorization.create.html
  *    https://globus.github.io/globus-sdk-javascript/classes/lib_core_authorization_AuthorizationManager.AuthorizationManager.html
+ * Error handling for requests is available through:
+ *    isErrorWellFormed - checks if the error is in the proper globus format
+ *    isConsentRequiredError - handles the case where the user needs to consent to the client accessing their resources
+ *    isAuthorizationRequirementsError - handles case where re-authorization is required
+ *  with Globus SDK documentation at:
+ *    https://globus.github.io/globus-sdk-javascript/modules/_globus_sdk.Errors.html
 */
 
 class DefaultAuthState {

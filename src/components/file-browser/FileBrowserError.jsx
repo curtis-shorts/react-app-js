@@ -44,7 +44,7 @@ export default function FileBrowserError({ error }) {
     );
   }
 
-  // User needs to do their MFA
+  // User needs to redo their MFA
   if (isWellFormed && isAuthorizationRequirementsError(error)) {
     /* eslint-disable camelcase */
     const {
