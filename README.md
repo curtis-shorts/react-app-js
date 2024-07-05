@@ -2,7 +2,7 @@
 
 This project is a React implementation of Globus' JavaScript API which does simple file transfers between two endpoints. The primary contribution of this code is a library which packages the API in an easy to call client-stub server interface and returns the response and data JSON.
 
-The source code for the project this is based on:
+Resources used in the creation of this project:
   * The [Globus JS SDK](https://github.com/globus/globus-sdk-javascript) and it's [documentation](https://globus.github.io/globus-sdk-javascript/index.html)
   * A [basic example](https://github.com/globus/globus-sdk-javascript/blob/main/examples/basic/index.html) provided with the Globus JS API
   * A static data portal [example](https://github.com/globus/static-data-portal) and [template](https://github.com/globus/template-data-portal)
