@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 
 // Provides the OAuth context
 import GlobusOAuthProvider from './components/globus-api/GlobusOAuthProvider.jsx';
-import GlobusSessionManager from './components/globus-api/GlobusSessionManager.jsx';
+import GlobusSessionManager from './components/list-endpoints/GlobusSessionManager.jsx';
 // Runs an example from Globus (converted to JS) retrieved from:
 //    https://github.com/globus/globus-sdk-javascript/blob/main/examples/basic/index.html
 import GlobusApp from './MyGlobusApp.jsx';
@@ -14,7 +14,7 @@ import GlobusTransferProvider from './components/globus-api/GlobusTransferProvid
 
 // Set the default values
 const redirect = window.location.origin + window.location.pathname
-console.log("Redirect path:",redirect)
+//console.log("Redirect path:",redirect)
 // Client is the UUID of the Thick Client the app is registered to with Globus
 const client = 'be49bc0c-8a25-412b-9ceb-f550beab6137'
 // Scope of the Globus API that the client is requesting to access

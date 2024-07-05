@@ -2,6 +2,29 @@ import React, { useState, useReducer, useEffect, useContext } from "react";
 import { createContext } from "react";
 import { authorization } from "@globus/sdk/cjs";
 
+/* Component:
+ *    GlobusOAuthProvider
+ * Description:
+ *    Provides a Globus authorization context which can be used for making requests
+ * Inputs:
+ *    redirect
+ *    client
+ *    scopes
+ * Usage:
+ *    <GlobusOAuthProvider
+ *      redirect={redirect}
+ *      client={client}
+ *      scopes={scopes}
+ *    >
+ *      const authManager = useOAuthContext();
+ *      manager.login()
+ *      manager.revoke()
+ *    </GlobusOAuthProvider>
+ * Globus SDK documentation:
+ *    https://globus.github.io/globus-sdk-javascript/functions/_globus_sdk.Authorization.create.html
+ *    https://globus.github.io/globus-sdk-javascript/classes/lib_core_authorization_AuthorizationManager.AuthorizationManager.html
+*/
+
 class DefaultAuthState {
   constructor() {
     this.isAuthenticated = false;
@@ -13,8 +36,6 @@ class DefaultAuthState {
 }
 
 const OAuthReducer = (state, action) => {
-  // state: Globus authentication class
-  // action = { type: "AUTHENTICATED"; payload: boolean } | { type: "REVOKE" }
   const AUTHENTICATED = "AUTHENTICATED";
   const REVOKE = "REVOKE";
   switch (action.type) {
@@ -33,16 +54,12 @@ const OAuthReducer = (state, action) => {
   }
 };
 
-// Create the OAuthContext
 const OAuthContext = createContext(undefined);
 
-// Call this function if you need to use variables from the context
 export function useOAuthContext(){
   return useContext(OAuthContext);
 }
 
-// Provide the calling scope with an authorization manager
-// Children is what is run inside of the authorization manager context
 const GlobusOAuthProvider = ({
   redirect,
   scopes,
@@ -84,7 +101,6 @@ const GlobusOAuthProvider = ({
     };
   }, [instance]);
 
-  // Make the context a provider of the authorization manager and run the children inside of it
   return (
     <OAuthContext.Provider
       value={{

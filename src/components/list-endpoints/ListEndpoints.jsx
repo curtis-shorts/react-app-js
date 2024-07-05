@@ -12,7 +12,7 @@ import { useTransferContext, useTransferDispatchContext } from "../globus-api/Gl
 import FileBrowser from "../file-browser/FileBrowser";
 import { CollectionSearch } from "./CollectionSearch";
 import { submitGlobusTransfer } from "../globus-api/submitGlobusTransfer";
-import { fetchEndpoint } from "../globus-api/fetchEndpoint";
+import { getGlobusEndpointMetadata } from "../globus-api/getGlobusEndpointMetadata";
 
 /*
  * Displays both endpoints and the current directory contents
@@ -20,8 +20,8 @@ import { fetchEndpoint } from "../globus-api/fetchEndpoint";
 
 export default function Home({transferCollection, transferPath}) {
   const auth = useOAuthContext();
-  const transferSettings = useTransferContext()
-  const dispatch = useTransferDispatchContext()
+  const transferSettings = useTransferContext();
+  const transferDispatch = useTransferDispatchContext();
 
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -29,7 +29,7 @@ export default function Home({transferCollection, transferPath}) {
   // Calls the Globus API to submit the transfer and displays a toast of the response
   async function handleStartTransfer() {
     // Submit the transfer request
-    const data = await submitGlobusTransfer(transferSettings, auth)
+    const [response, data] = await submitGlobusTransfer(auth, transferSettings, false, null);
 
     // Toast handler for the response
     // NOTE: the toast handler calls the Globus SDK directly to ge the URL to show the task in Globus
@@ -75,14 +75,18 @@ export default function Home({transferCollection, transferPath}) {
    *  Endpoint 2 is dynamic so the metadata is collected by searchGlobusEndpoint
   */
   useEffect(() => {
+    // Verify the OAuth manager is valid
+    //if (!auth.isAuthenticated) {
+    //  return;
+    //}
     async function updateDispatch(auth, transferCollection){
       // Submit collection metadata request
-      const data = await fetchEndpoint(auth, transferCollection);
+      const [response, data] = await getGlobusEndpointMetadata(auth, transferCollection);
 
       // Update the dispatcher
-      if(data){
-        dispatch({ type: "SET_ENDPOINT_ONE", payload: data });
-        dispatch({ type: "SET_FILE_PATH_ONE", payload: data.default_directory });
+      if(response !== null && response.ok){
+        transferDispatch({ type: "SET_ENDPOINT_ONE", payload: data });
+        transferDispatch({ type: "SET_FILE_PATH_ONE", payload: data.default_directory });
       }
     }
     updateDispatch(auth, transferCollection);
@@ -145,8 +149,8 @@ export default function Home({transferCollection, transferPath}) {
                     colorScheme="gray"
                     icon={<Icon as={XCircleIcon} boxSize={6} />}
                     onClick={() => {
-                      dispatch({ type: "SET_ENDPOINT_TWO", payload: null });
-                      dispatch({ type: "SET_FILE_PATH_TWO", payload: null });
+                      transferDispatch({ type: "SET_ENDPOINT_TWO", payload: null });
+                      transferDispatch({ type: "SET_FILE_PATH_TWO", payload: null });
                     }}
                   />
                 </InputRightElement>
@@ -184,11 +188,11 @@ export default function Home({transferCollection, transferPath}) {
                 <DrawerBody>
                   <CollectionSearch
                     onSelect={(endpoint) => {
-                      dispatch({
+                      transferDispatch({
                         type: "SET_ENDPOINT_TWO",
                         payload: endpoint,
                       });
-                      dispatch({
+                      transferDispatch({
                         type: "SET_FILE_PATH_TWO",
                         payload: endpoint.default_directory,
                       });

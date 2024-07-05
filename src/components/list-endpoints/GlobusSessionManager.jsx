@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
 
-import { useOAuthContext } from './GlobusOAuthProvider';
+import { useOAuthContext } from '../globus-api/GlobusOAuthProvider';
 
 /*
  * Handles the user's signing in/out of the Globus session
- * The functionality lies in the manager of the OAuth context
+ * The functionality lies in the manager of the OAuth context manager:
+ *    manager.login()
+ *    manager.revoke()
  * The user's info is dumped by user-information to demonstrate the session owner
  *    Need to uncomment lines 35/41 and move lines 56-58 to after line 51 to observe
  */
@@ -52,9 +54,5 @@ const GlobusSessionManager = () => {
     </div>
   );
 };
-
-//<code>
-//  <pre id="user-information"></pre>
-//</code>
 
 export default GlobusSessionManager;

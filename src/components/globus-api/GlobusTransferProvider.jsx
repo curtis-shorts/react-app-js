@@ -1,27 +1,37 @@
-import React, { useReducer, createContext, useContext, useState } from "react";
+import React, { useReducer, createContext, useContext } from "react";
 
-/*
- * The reason we're making the dispatcher seperate is because the context re-renders when it's called
- * Can read from the transfer context this way without re-rendering
+/* Component:
+ *    GlobusTransferProvider
+ * Description:
+ *    Provides a context to manage the Globus transfer settings
+ * Usage:
+ *    <GlobusTransferProvider>
+ *      const transferSettings = useTransferContext()
+ *      const transferDispatch = useTransferDispatchContext()
+ *      * Set up transfer, example:
+ *          transferDispatch({ type: "SET_ENDPOINT_ONE", payload: endpointUuidOne });
+ *          transferDispatch({ type: "SET_FILE_PATH_ONE", payload: directoryOne });
+ *          transferDispatch({ type: "SET_ENDPOINT_TWO", payload: endpointUuidTwo });
+ *          transferDispatch({ type: "SET_FILE_PATH_TWO", payload: directoryTwo });
+ *          transferDispatch({ type: "ADD_ITEM", payload: item });
+ *          transferDispatch({ type: "REMOVE_ITEM", payload: item });
+ *          transferDispatch({ type: "RESET_ITEMS" });
+ *      submitGlobusTransfer(..., transferSettings, ...);
+ *    </GlobusTransferProvider>
 */
 
-// Create the TransferContext
 const TransferContext = createContext(undefined);
 
-// Call this function if you need to use variables from the context
 export function useTransferContext(){
   return useContext(TransferContext);
 }
 
-// Create the TransferDispatchContext
 const TransferDispatchContext = createContext(undefined);
 
-// Call this function if you need to use variables from the context
 export function useTransferDispatchContext(){
   return useContext(TransferDispatchContext);
 }
 
-// Bidirectional transfer naming convention
 class DefaultTransferState {
     constructor() {
         this.endpoint_one = null;
@@ -32,7 +42,6 @@ class DefaultTransferState {
     }
 }
 
-// Action reducer to set endpoints
 export const transferSettingsReducer = (state, action) => {
     switch (action.type) {
       case "SET_ENDPOINT_ONE": {
@@ -65,16 +74,15 @@ export const transferSettingsReducer = (state, action) => {
     }
 };
 
-// Provide the calling scope with a transfer manager
 const GlobusTransferProvider = ({children}) => {
     const initialState = DefaultTransferState;
 
-    const [transferSettings, dispatch] = useReducer(transferSettingsReducer, initialState);
+    const [transferSettings, transferDispatch] = useReducer(transferSettingsReducer, initialState);
 
     // Make the context a provider of the authorization manager and run the children inside of it
     return (
       <TransferContext.Provider value={transferSettings}>
-        <TransferDispatchContext.Provider value={dispatch}>
+        <TransferDispatchContext.Provider value={transferDispatch}>
             {children}
         </TransferDispatchContext.Provider>
       </TransferContext.Provider>

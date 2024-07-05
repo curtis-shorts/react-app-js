@@ -1,24 +1,28 @@
 import React, { useCallback, useEffect, useReducer, useState, createContext } from "react";
 import {
   Table, TableContainer, Tr, Th, Td, Thead, Code, Icon, Button,
-  Box, Spinner, Center, Tbody, ButtonGroup, Flex, Spacer, useToast,
+  Box, Spinner, Center, Tbody, ButtonGroup, Flex, Spacer, useToast
 } from "@chakra-ui/react";
 import { ChevronRightIcon } from "@chakra-ui/icons";
-import { ArrowPathIcon, ArrowUturnUpIcon, FolderPlusIcon, } from "@heroicons/react/24/outline";
-import { transfer } from "@globus/sdk/cjs";
+import { ArrowPathIcon, ArrowUturnUpIcon, FolderPlusIcon } from "@heroicons/react/24/outline";
 
 import { useOAuthContext } from "../globus-api/GlobusOAuthProvider";
 import { useTransferDispatchContext } from "../globus-api/GlobusTransferProvider";
+import { getGlobusEndpointMetadata } from "../globus-api/getGlobusEndpointMetadata";
+import { globusLs } from "../globus-api/globusLs";
+import { globusRename } from "../globus-api/globusRename";
+import { globusMkdir } from "../globus-api/globusMkdir";
+import { globusRm } from "../globus-api/globusRm";
+
 import FileBrowserViewMenu from "./FileBrowserViewMenu";
 import FileBrowserError from "./FileBrowserError";
-
 import FileNameForm from "./FileNameForm";
 import FileEntry from "./FileEntry";
-import { fetchEndpoint } from "../globus-api/fetchEndpoint";
 
 
-// Handles the viewing of files in an endpoint/collection
-
+/*
+ * Handles the viewing of files in an endpoint/collection
+*/
 
 const initialState = {
   view: {
@@ -55,6 +59,8 @@ function fileBrowserReducer(state = initialState, action) {
 
 
 export const FileBrowserContext = createContext(initialState);
+
+// this context is simply created for handling what is/isn't displayed in the FileBrowser (dictated by FileBrowserViewMenu)
 export const FileBrowserDispatchContext = createContext(() => {});
 
 
@@ -79,13 +85,12 @@ export default function FileBrowser({ variant, collection, path }) {
 
   // Collection state metadata
   useEffect(() => {
-    setEndpoint(fetchEndpoint(auth, collection));
+    setEndpoint(getGlobusEndpointMetadata(auth, collection));
   }, [auth, collection]);
 
+  // ls a new endpoint
   const fetchItems = useCallback(async () => {
-    if (!auth.isAuthenticated) {
-      return;
-    }
+    // Set the loader to spin and clear the items selected for transfer
     setIsLoading(true);
     const isSource = variant === "endpoint_one";
     if (isSource) {
@@ -94,19 +99,14 @@ export default function FileBrowser({ variant, collection, path }) {
       });
     }
 
-    const response = await transfer.fileOperations.ls(collection, {
-      headers: {
-        Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
-      },
-      query: {
-        path: browserPath ?? undefined,
-        show_hidden: fileBrowser.view.show_hidden ? "true" : "false",
-      },
-    });
-    
-    const data = await response.json();
+    // Call the Globus API to ls the directory
+    const [response, data] = await globusLs(auth, collection, browserPath, fileBrowser.view.show_hidden);
+
+    //
     setIsLoading(false);
     setLsResponse(data);
+
+    // Handle errors
     if (!response.ok) {
       setError("code" in data ? data : null);
       return;
@@ -134,42 +134,56 @@ export default function FileBrowser({ variant, collection, path }) {
   }, [fetchItems]);
 
   const addDirectory = async (name) => {
-    setIsLoading(true);
-    const response = await transfer.fileOperations.mkdir(collection, {
-      payload: { path: `${browserPath}${name}` },
-      headers: {
-        Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      showErrorToast(data);
-    } else {
+    async function handleMkdir(auth, collection, browserPath, name){
+      setIsLoading(true);
+      const [response, data] = await globusMkdir(auth, collection, browserPath, name);
+      if (!response.ok) {
+        showErrorToast(data);
+      } else {
+        fetchItems();
+      }
       fetchItems();
+      //setIsLoading(false);
     }
-    fetchItems();
+    handleMkdir(auth, collection, browserPath, name);
   };
 
   const rename = async (file, absolutePath, updatedName) => {
-    const response = await transfer.fileOperations.rename(collection, {
-      payload: {
-        old_path: `${absolutePath}${file.name}/`,
-        new_path: `${absolutePath}${updatedName}/`,
-      },
-      headers: {
-        Authorization: `Bearer ${auth.authorization?.tokens.transfer?.access_token}`,
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      showErrorToast(data);
-    } else {
-      setItems(
-        items.map((item) =>
-          item.name === file.name ? { ...item, name: updatedName } : item
-        )
-      );
+    async function handleRename(auth, file, collection, absolutePath, updatedName){
+      const [response, data] = await globusRename(auth, collection, absolutePath, file.name, updatedName);
+      if (response === null){
+        return;
+      }
+      if (!response.ok) {
+        showErrorToast(data);
+      } else {
+        setItems(
+          items.map((item) =>
+            item.name === file.name ? { ...item, name: updatedName } : item
+          )
+        );
+      }
     }
+    handleRename(auth, file, collection, absolutePath, updatedName);
+  };
+
+  const remove = async (file, absolutePath) => {
+    async function handleRemove(auth, file, collection, absolutePath){
+      const [response, data] = await globusRm(auth, collection, absolutePath, file, false, null);
+      if (response === null){
+        return;
+      }
+      if (!response.ok) {
+        showErrorToast(data);
+      } else {
+        setItems(
+          items.map((item) =>
+            item.name === file.name ? { ...item } : item
+          )
+        );
+      }
+    }
+    handleRemove(auth, file, collection, absolutePath);
   };
 
   const showErrorToast = (data) => {
@@ -181,6 +195,15 @@ export default function FileBrowser({ variant, collection, path }) {
     });
   };
 
+  /*
+   * Displays:
+   *    Spinner if anything in the browser is loading
+   *    FileBrowserError if there's an error
+   *    If working right:
+   *      Current ls path
+   *      ButtonGroup for: FileBrowserViewMenu, add new folder, up one folder, refresh
+   *      Table with Thead (name, modiffied, size) and Tbody (add directory if source, each ls item mapped to a FileEntry)
+  */
   return (
     <>
       <FileBrowserContext.Provider value={fileBrowser}>
@@ -280,6 +303,9 @@ export default function FileBrowser({ variant, collection, path }) {
                           }}
                           handleRename={async (updatedName) => {
                             await rename(item, lsResponse.absolute_path, updatedName);
+                          }}
+                          handleRemove={async () => {
+                            await remove(item, lsResponse.absolute_path);
                           }}
                         />
                       ))}

@@ -1,31 +1,39 @@
 import { transfer } from "@globus/sdk/cjs";
 
-/* 
- *  Usage:
- *  Input values should be provided in a similar manner to:
- *   -> endpointString is user-input from a search box
- *   -> manager is an OAuth2 Globus manager generated in the calling hook as:
- *          import { useOAuthContext } from "../globus-auth-context/GlobusOAuthProvider";
- *          const manager = useOAuthContext();
- *  Returns a json file that is that holds the data for a list of Globus endpoints matching
- *      the 'endpointString' input.
- *  Note: the limit variable in the query dictates the max number of items returned
- */
-export async function searchGlobusEndpoints(endpointString, manager) {
-    const query = endpointString.currentTarget.value;
-    if (!query) {
-        return null;
+/* Function:
+ *    searchGlobusEndpoints
+ * Description:
+ *    Globus client-stub to get a list of endpoints matching the input string
+ * Inputs:
+ *    authManager - Globus OAuth manager
+ *    searchString - The string to match against endpoint names
+ *    numberOfEndpoints - The number of best matches to return
+ * Outputs:
+ *    response - the https response from globus for the search request
+ *    data - a json containing the metadata for the endpoints that matched
+ * Globus SDK documentation:
+ *    https://globus.github.io/globus-sdk-javascript/functions/_globus_sdk.transfer.endpointSearch.html
+*/
+export async function searchGlobusEndpoints(authManager, searchString, numberOfEndpoints) {
+  if (!authManager.isAuthenticated) {
+    return [null, null];
+  }
+  
+  const query = searchString.currentTarget.value;
+  if (!query) {
+    return null;
+  }
+
+  const response = await transfer.endpointSearch({
+    headers: {
+      Authorization: `Bearer ${authManager.authorization?.tokens.transfer?.access_token}`
+    },
+    query: {
+      filter_fulltext: query,
+      limit: numberOfEndpoints
     }
+  });
 
-    const response = await transfer.endpointSearch({
-        query: {
-            filter_fulltext: query,
-            limit: 20,
-        },
-        headers: {
-            Authorization: `Bearer ${manager.authorization?.tokens.transfer?.access_token}`,
-        },
-    });
-
-    return await response.json();
+  const data = await response.json();
+  return [response, data];
 }

@@ -16,7 +16,7 @@ export const CollectionSearch = ({ onSelect = () => {} }) => {
   // Wrapper to call the Globus API for endpoint searches
   async function handleSearchWrapper(endpointString) {
     // Call the endpoint search API
-    const data = await searchGlobusEndpoints(endpointString, manager)
+    const [response, data] = await searchGlobusEndpoints(manager, endpointString, 20)
     
     // Handle empty return case
     if (data !== null){

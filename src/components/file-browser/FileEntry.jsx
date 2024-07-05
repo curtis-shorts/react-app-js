@@ -6,15 +6,22 @@ import {
 import { ArrowUpOnSquareIcon } from "@heroicons/react/24/outline";
 
 import FileNameForm from "./FileNameForm";
-//import { isDirectory, readable } from "../list-endpoints/globus";
+import FileEntryIcon from "./FileEntryIcon";
+import { useTransferDispatchContext } from "../globus-api/GlobusTransferProvider";
+import { FileBrowserContext } from "./FileBrowser";
 
+/* ALL UI, NO GLOBUS INTERACTIONS */
+// Exception is that the handleRename function gets passed down into this to get called
+// Easier to pass it this way than to pass the whole ls context
+
+/************************ Supporting Declarations *************************/
 const KB = 1000;
 const MB = KB * 1000;
 const GB = MB * 1000;
 const TB = GB * 1000;
 const PB = TB * 1000;
 
-export function readable(bytes, truncate = 2) {
+export function bytesHumanReadable(bytes, truncate = 2) {
   let unit = "B";
   let bytesInUnit = 1;
   if (bytes < KB) {
@@ -42,13 +49,14 @@ export function readable(bytes, truncate = 2) {
 export function isDirectory(entry) {
   return entry.type === "dir";
 }
+/**************************************************************************/
 
-import FileEntryIcon from "./FileEntryIcon";
-//import { TransferSettingsDispatchContext } from "../list-endpoints/Context";
-import { useTransferDispatchContext } from "../globus-api/GlobusTransferProvider";
-
-import { FileBrowserContext } from "./FileBrowser";
-
+/*
+  * Display the metadata for a given object (file or directory, sym-links are seen by Globus as the thing they point to)
+  * Displays the date last modified and object size if set in the FileBrowserMenu
+  * Displays selection for adding/removing items to/from the transfer
+  * If you right click on an object in the destination then you get the option to rename it
+*/
 export default function FileEntry({
   item,
   isSource,
@@ -56,16 +64,19 @@ export default function FileEntry({
   absolutePath,
   openDirectory,
   handleRename,
+  handleRemove
 }) {
+  // Setup
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showEditView, setShowEditView] = useState(false);
   const menuRef = React.useRef(null);
 
-  //const transferSettingsDispatch = useContext(TransferSettingsDispatchContext);
   const transferSettingsDispatch = useTransferDispatchContext();
 
   const fileBrowser = useContext(FileBrowserContext);
+
+  // Main
   const displayContextMenu = (event) => {
     if (!isSource && !showEditView) {
       event.preventDefault();
@@ -77,8 +88,9 @@ export default function FileEntry({
       }
     }
   };
-  const includeLastModified =
-    fileBrowser.view.columns.includes("last_modified");
+
+  // Read in the settings for what to display as set in the FileBrowserMenu
+  const includeLastModified = fileBrowser.view.columns.includes("last_modified");
   const includeSize = fileBrowser.view.columns.includes("size");
 
   return (
@@ -100,9 +112,9 @@ export default function FileEntry({
       <Td>
         <HStack>
           {/*Show a file or folder icon*/ !showEditView && <FileEntryIcon entry={item} />}
-          {isLoading ? /*Loading spinner*/(
+          {isLoading ? /*Loading spinner, elif edit file, elif directory, else file*/(
               <Spinner ml={2} /> 
-            ) : /*edit view*/ showEditView ? (
+            ) : showEditView ? (
               <FileNameForm
                 onSubmit={async (name) => {
                   setIsLoading(true);
@@ -114,11 +126,11 @@ export default function FileEntry({
                 toggleShowForm={setShowEditView}
                 initialValue={item.name}
               />
-            ) : /*directory*/ isDirectory(item) ? (
+            ) : isDirectory(item) ? (
               <Button textColor="black" variant="link" onClick={openDirectory}>
                 {item.name}
               </Button>
-            ) : /*file*/ (
+            ) : (
               <Text textColor="black">{item.name}</Text>
             )
           }
@@ -145,7 +157,7 @@ export default function FileEntry({
           {item.size ? (
             <Tooltip label={`${item.size} B`} variant="outline" hasArrow>
               <Text _hover={{ cursor: "help" }}>
-                {item.size && readable(item.size)}
+                {item.size && bytesHumanReadable(item.size)}
               </Text>
             </Tooltip>
           ) : (
@@ -176,6 +188,10 @@ export default function FileEntry({
       >
         <MenuList ref={menuRef}>
           <MenuItem onClick={() => setShowEditView(true)}>Rename</MenuItem>
+          <MenuItem onClick={() => {
+              handleRemove();
+            }
+            }>Remove</MenuItem>
         </MenuList>
       </Menu>
     </Tr>
