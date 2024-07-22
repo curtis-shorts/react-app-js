@@ -3,6 +3,12 @@ import { Box, Input, InputGroup, Stack, Card, CardHeader, CardBody, Text, List, 
 import { useOAuthContext } from "../globus-api/GlobusOAuthProvider";
 import { searchGlobusEndpoints } from "../globus-api/searchGlobusEndpoints";
 
+import { addUserToGuestCollection } from '../globus-api/addUserToGuestCollection.js';
+import { removeUserFromGuestCollection } from "../globus-api/removeUserFromGuestCollection.js";
+import { getGuestCollectionPermissions } from "../globus-api/getGuestCollectionPermissions.js"
+import { getAllGlobusTasks } from "../globus-api/getAllGlobusTasks.js";
+import { getGlobusTask } from "../globus-api/getGlobusTask.js";
+
 /*
  * Displays an endpoint/collection search menu in a popup on the right side of the screen
  * User inputs a string which all matching endpoints of are called
@@ -12,6 +18,23 @@ import { searchGlobusEndpoints } from "../globus-api/searchGlobusEndpoints";
 export const CollectionSearch = ({ onSelect = () => {} }) => {
   const manager = useOAuthContext();
   const [results, setResults] = useState([]);
+
+  // Hooked it to the collection searchbar so it can be triggered multiple times
+  async function runTests() {
+    console.log("Running test...")
+    const collectionId = "693b181f-7a0b-4112-ba05-c20828196a88";
+    const userId = "ae9445b1-6609-4173-9125-f691aac46887";
+    const filePathInCollection = "/";
+    const guestCollectionPermissionsId = "7c7f009e-4723-11ef-8dfb-19f3c8361d4f";
+    const taskId = "";
+    //const [response, data] = await addUserToGuestCollection(manager, collectionId, userId, filePathInCollection)
+    //const [response, data] = await removeUserFromGuestCollection(manager, collectionId, guestCollectionPermissionsId)
+    //const [response, data] = await getGuestCollectionPermissions(manager, collectionId)
+    const [response, data] = await getAllGlobusTasks(manager, 10, 0)
+    //const [response, data] = await getGlobusTask(manager, taskId)
+    console.log("'Add to guest collection' data:", data)
+  }
+  runTests();
 
   // Wrapper to call the Globus API for endpoint searches
   async function handleSearchWrapper(endpointString) {
